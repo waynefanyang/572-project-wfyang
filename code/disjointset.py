@@ -5,7 +5,7 @@ class disjointSet(object):
     def __init__(self,n,values):
         self.parent = list(range(n))
         self.values = values
-        self.counts = [1.0 for i in range(n)]
+        self.counts = [1.0]*n
 
     def find(self, v):
         # Based on union strategy, this is equivalent to finding the minimum value

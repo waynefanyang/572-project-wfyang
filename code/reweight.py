@@ -70,3 +70,6 @@ if __name__ == "__main__":
 
     out = np.around(reweightedl1(Cov,0.1,0.1),3)
     print out
+
+    import cProfile
+    cProfile.run("out = np.around(reweightedl1(Cov,0.1,0.1),3)")

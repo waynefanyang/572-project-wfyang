@@ -10,7 +10,7 @@ def onenorm(x):
 ### Two norm
 # x is any numpy.matrix
 def twonorm(x):
-    return np.sqrt(sum(np.square(x)))[0,0]
+    return np.sqrt(np.sum(np.square(x)))
 
 ### LASSO Objective (admm form)
 # X is an N x p matrix
@@ -32,7 +32,7 @@ def admmObj(X,y,beta,z,lambduh,rho,a):
 # rho is a positive number
 # output is a p x 1 matrix
 def admm(X,y,lambduh,rho):
-    tol = 1e-100
+    tol = 1e-10
     p = X.shape[1]
     xtxpi = (X.T * X + rho * np.matrix(np.identity(p))).I
     oldbeta = np.matrix([[0.0]]*p)
@@ -40,8 +40,8 @@ def admm(X,y,lambduh,rho):
     z = np.matrix([[1.0]]*p)
     a = np.matrix([[1.0]]*p)
     iteration = 0
-    while iteration < 100:
-        oldbeta = beta
+    while iteration < 100 and twonorm(oldbeta - beta) > tol:
+        oldbeta = copy(beta)
         beta = xtxpi * X.T * y + rho * xtxpi  * z -  xtxpi *a
         for i in range(p):
             z[i,0] = np.sign(beta[i,0] + 1.0/rho*a[i,0])*max(0.0,(np.absolute(beta[i,0] + 1.0/rho*a[i,0])-lambduh[0,i]/rho))
@@ -106,6 +106,9 @@ if __name__ == "__main__":
     lambduh= np.matrix(np.array([[0.1]*5]*5))
 
     out = glassoSolve(Cov,lambduh,1.0)
+
+    print np.around(out,3)
+
 
 
 
