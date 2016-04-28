@@ -36,7 +36,7 @@ def _solveSub(w,alpha,ro,h):
     values = [0.0] * n
 
     for k in range(len(values)):
-        values[k] = np.abs(w[k]) - alpha/ro*(h(k+1) - h(k))
+        values[k] = np.abs(w[k]) - 0.5*alpha/ro*(h(k+1) - h(k))
 
     set = disjointSet(n,values)
 

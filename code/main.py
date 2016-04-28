@@ -3,29 +3,48 @@ __author__ = 'wayne'
 from dualdecomp import *
 from reweight import *
 from datagen import *
-from numpy.linalg import norm as no
+from roc import *
+from testingUtils import *
+# if __name__ == "__main__":
 
-def normalize(s):
-    return np.apply_along_axis(lambda x: (x-np.mean(x))/no(x-np.mean(x)) ,0,s)
+p = 20
+m = 2
+Theta = genPrecisionPA(p,m)
+print Theta
 
-if __name__ == "__main__":
-    p = 50
-    Theta = genPrecisionPA(p)
-    print Theta
+sample = sampleObservations(200,p,Theta)
+C = sampleCovariance(sample)
+print C
+print "running"
+# a = reweightedl1(np.matrix(C),0.5,0.5)
 
-    sample = sampleObservations(500,p,Theta)
-    C = sampleCovariance(sample)
-    print C
-    print "running"
-    # a = reweightedl1(np.matrix(C),0.5,0.5)
-    a = admm(C,0.1,0.5,0.9,lambda x: np.abs(x),0.000001)
-    b = admm(C,0.5,0.5,0.9,lambda x: np.abs(x),0.000001)
-    c = admm(C,0.7,0.5,0.9,lambda x: np.abs(x),0.000001)
-    print Theta
-    print np.around(a,2)
-    print np.around(b,2)
-    print np.around(c,2)
-    # #
+alphas = [0.5,0.7,1.2,2.0,2.5]
+
+a = admm(C,alpha,0.5,0.9,lambda x: np.log(x+1) + 0.1*x, 1e-6, True, 1000)
+b = admm(C,alpha,0.5,0.9,lambda x: np.log(x+1) + 0.1*x, 1e-6, False, 1000)
+#
+# estimates = [admm(C,alpha,0.5,0.9,lambda x: np.log(x+1)+0.1*x, 0.000001, False, 1000) for alpha in alphas]
+#
+#
+#
+# for i in range(len(alphas)):
+#     print alphas[i], edgeCount(estimates[i])
+#
+# rocs = [roc(est,Theta) for est in estimates]
+# names = ["Alpha = " + str(alpha) for alpha in alphas]
+# fname = "test.png"
+#
+# plot_roc(rocs,names,fname)
+#
+
+
+
+
+
+
+
+
+    # # #
     # data = np.loadtxt("glasso_data.csv",delimiter=",")
     # means = np.array([0.0]*5)
     # for i in range(1000):

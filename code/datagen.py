@@ -7,11 +7,11 @@ from numpy.random import multivariate_normal as mvn
 from numpy.linalg import norm
 from networkx_viewer import Viewer
 
-def genPrecisionPA(p):
+def genPrecisionPA(p,m):
 
     M = np.zeros((p,p))
 
-    ba=nx.barabasi_albert_graph(p,2)
+    ba=nx.barabasi_albert_graph(p,m)
 
     for e in ba.edges():
 
@@ -20,7 +20,7 @@ def genPrecisionPA(p):
         M[e[1]][e[0]] = -0.2
 
     for i in range(p):
-        M[i][i] = 1.5 - np.sum(M[i])
+        M[i][i] = 0.5 - np.sum(M[i])
 
     return M
 
@@ -32,8 +32,19 @@ def sampleObservations(n,p,Theta):
     return sample
 
 def sampleCovariance(sample):
-    center = sample - np.mean(sample)
+    m = np.apply_along_axis(np.mean,0,sample)
+    center = np.apply_along_axis(lambda x: x-m, 1, sample)
+    v = np.apply_along_axis(norm,0,center)
+    center = np.apply_along_axis(lambda x: x/v, 1, center)
     return center.transpose().dot(center)
+
+def sampleCovariance1(sample):
+    m = np.apply_along_axis(np.mean,0,sample)
+    center = np.apply_along_axis(lambda x: x-m, 1, sample)
+    C = center.transpose().dot(center)
+    covNormalizer = np.sqrt(np.diag(C))
+    C = C / np.outer(covNormalizer, covNormalizer)
+    return C
 
 
 

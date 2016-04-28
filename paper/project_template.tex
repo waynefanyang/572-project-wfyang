@@ -1,0 +1,71 @@
+\documentclass{uwstat572}
+
+%%\setlength{\oddsidemargin}{0.25in}
+%%\setlength{\textwidth}{6in}
+%%\setlength{\topmargin}{0.5in}
+%%\setlength{\textheight}{9in}
+
+\renewcommand{\baselinestretch}{1.5} 
+
+
+\bibliographystyle{plainnat}
+
+\begin{document}
+%%\maketitle
+
+\begin{center}
+  {\LARGE A Convex Formulation for Learning Scale-Free Networks via Submodular Relaxation}\\\ \\
+  {Wayne Yang \\ 
+    Department of Statistics, University of Washington Seattle, WA, 98195, USA
+  }
+\end{center}
+
+
+
+\begin{abstract}
+  To be completed.
+\end{abstract}
+
+\section{Introduction}
+Defazio and Caetano present a novel method for estimating the structure of an undirected graphical model with a focus on Gaussian graphical models. In a graphical model, a random vector of dimension $p$ is represented by the graph $G = (V,E)$.  The vertices $v \in V$ represent each of the variables in the random vector and the edges $e \in E$ encode some form of association between two vertices. In the case of Gaussian graphical models, the edge set $E$ denotes the conditional independence structure of the variables.  Where the lack of an edge $e$ indicates the conditional independence of the two corresponding vertices given all of the other vertices.  As discussed in \cite{dempster}, the estimation of the structure of a Gaussian graphical model is equivalent to estimating the precision matrix.  The non-zero entries in the precision matrix the  signify the presence of an edge in the corresponding graph.  Therefore, determining the structure of a Gaussian graphical model boils down to a sparse estimate of the precision matrix.
+
+The standard method for sparse estimation is currently an $l_1$ regularized maximum likelihood approach introduced by \cite{Yuan2007} which uses a Gaussian likelihood and a LASSO type penalty.  The estimator of the precision matrix, denoted $\widehat{\Theta}$, is defined to be
+\begin{equation}
+    \widehat{\Theta} = \arg\min_{\Theta} -\log( \det( \Theta)) + tr(S \Theta) + \lambda \sum_{i, j} |\Theta_{i,j}|,
+\end{equation}
+where $S$ is the empirical covariance matrix and $\lambda$ is a non-negative tuning parameter. The diagonal terms $\Theta_{i,i}$ are sometimes excluded from the regularization term. The computation of this estimator or an approximate version is a well studied problem.  Examples include the neighborhood selection procedure from \cite{meinshausen2006}, block coordinate descent on the covariance matrix from \cite{Banerjee2008}, block coordinate descent on the precision matrix from \cite{Friedman2008}, alternating direction method of multipliers from \cite{Boyd2011}, and others.
+
+While the standard $l_1$ method has been used successfully in many applications, it may perform poorly when the maximal degree of the latent graph $d$ is large relative to the dimension of the data $p$. Experimentally, \cite{Schaefer2005} construct graphs for which the standard method fails to identify hub vertices with large degrees. On the theoretical side, \cite{ravikumar2011} show that the minimum sample size for consistency of the $l_1$ regularized estimator in the $\| \cdot \|_{\infty}$ norm is of order $d^2 \log(p)$. Similar results can be shown for the result of the neighborhood selection procedure in \cite{meinshausen2006}.  In the particular case of scale-free graphs, there are usually hub vertices that pose a problem for the standard method.  As a result, specialized techniques are required.
+
+One existing method designed for scale free graphs based on a reweighted $l_1$ regularization term was developed in \cite{liu11c}.  The Liu and Ihler method minimizes the objective
+\begin{equation}
+    \widehat{\Theta} = \arg\min_{\Theta}  -\log( \det( \Theta)) + tr(S \Theta) + \alpha \sum_{i=1}^p \log( \| \Theta_{i,\neg}\|_1 + \varepsilon ) + \beta \sum_{i=1}^p |\Theta_{i,i}|,
+\end{equation}
+where $\Theta_{i,\neg}$ denotes the $i^{th}$ row excluding the diagonal element.  The $\alpha$ and $\beta$ terms are non-negative tuning parameters and $\varepsilon$ is a positive offset to ensure the argument to log is not zero. While their experimental results are encouraging, the non-convexity of the objective induced by the log terms is undesirable because it complicates optimization and can only guarantee a local optimum.
+
+The method proposed by Defazio and Caetano constructs an estimator which promotes a scale-free structure using a convex objective function motivated by viewing regularized likelihood estimation as Bayesian Maximum A Posteriori estimation.  The authors consider a prior placed on the edge set of the graph to obtain a combinatorial penalty based only on the degrees of the vertices. This combinatorial penalty is a submodular function on edge sets and admits a natural convex relation to Euclidean space to account for the real valued parameters required in a precision matrix. The resulting estimator is then the solution to a convex optimization problem. While the use of priors to promote scale-free structure was explored in \cite{sheridan2010}, the authors in that paper use MCMC to draw samples from the posterior distribution in order to provide an inexact point estimate.  Defazio and Caetano's estimator can be efficiently computed as the exact solution to a convex program.
+
+In this report, we will discuss the motivation, mathematical construction, and computation of the proposed method as well as evaluate the method's performance on both synthetic and real-world data.  We will also compare the method's performance against the standard $l_1$ procedure and the reweighted $l_1$ procedure.  
+
+\section{Methods}
+
+\section{Results}
+
+\section{Discussion}
+
+\bibliography{stat572}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+Understanding and estimating the structure of the edge set $E$ is an important task in fields such as social network analysis or bioinformatics.  For example, graphical models may be fit to gene expression data in order to estimate a gene expression network as described in  or to identify individual genes which have a large influence on the network.
+
+
+Both the reweighted $l_1$ method and the convex relaxation method can both be thought of as part of a larger class of procedures which induce {\textit{structured}} sparsity in parameter estimates, where prior knowledge about the sparsity pattern can be exploited.  Examples include the group LASSO in \cite{Yuan06}, the fused LASSO in \cite{Tibshirani05sparsityand}, and trend filtering in \cite{Kim09trend} which all encode some desired properties in parameter estimates beyond simple sparsity.  Furthermore, the Defazio and Caetano is an example of the connection between submodular functions and sparsity inducing forms discussed in \cite{NIPS2010_3933}.
