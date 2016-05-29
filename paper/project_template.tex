@@ -3,6 +3,9 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[caption = false]{subfig}
 \usepackage[linesnumbered,algoruled,boxed,lined]{algorithm2e}
 
 %%\setlength{\oddsidemargin}{0.25in}
@@ -56,9 +59,9 @@
 \citet{Defazio2012} present a novel method for estimating the structure of an undirected graphical model with a focus on Gaussian graphical models. In a graphical model, a random vector of dimension $p$ is represented by the graph $G = (V,E)$.  The vertices $v \in V$ represent each of the variables in the random vector and the edges $e \in E$ encode some form of association between two vertices. In the case of Gaussian graphical models, the edge set $E$ denotes the conditional independence structure of the variables.  Where the lack of an edge $e$ indicates the conditional independence of the two corresponding vertices given all of the other vertices.  As discussed in \cite{dempster}, the estimation of the structure of a Gaussian graphical model is equivalent to estimating the precision matrix.  The non-zero entries in the precision matrix signify the presence of an edge in the corresponding graph.  Therefore, determining the structure of a Gaussian graphical model boils down to a sparse estimate of the precision matrix.
 
 The standard method for sparse estimation is currently an $l_1$ regularized maximum likelihood approach, introduced in \cite{Yuan2007}, which uses a Gaussian likelihood and a LASSO type penalty.  The estimator of the precision matrix, denoted $\widehat{\Theta}$, is defined to be
-\begin{equation*}
+\begin{equation}\label{glasso}
     \widehat{\Theta} = \arg\min_{\Theta} -\log( \det( \Theta)) + tr(S \Theta) + \lambda \sum_{i, j} |\Theta_{i,j}|,
-\end{equation*}
+\end{equation}
 where $S$ is the empirical covariance matrix and $\lambda$ is a non-negative tuning parameter. The diagonal terms $\Theta_{i,i}$ are sometimes excluded from the regularization term. The computation of this estimator or an approximate version of it is a well studied problem.  Examples include the neighborhood selection procedure from \cite{meinshausen2006}, block coordinate descent on the covariance matrix from \cite{Banerjee2008}, block coordinate descent on the precision matrix from \cite{Friedman2008}, alternating direction method of multipliers from \cite{Boyd2011}, and others.
 
 While the standard $l_1$ method has been used successfully in many applications, it may perform poorly when the maximal degree of the latent graph $d$ is large relative to the dimension of the data $p$. Experimentally, \cite{Schaefer2005} construct graphs for which the standard method fails to identify hub vertices with large degrees. On the theoretical side, \cite{ravikumar2011} show that the minimum sample size for consistency of the $l_1$ regularized estimator in the $\| \cdot \|_{\infty}$ norm is of order $d^2 \log(p)$ which suggest that consistent estimation a precision matrix in a high-dimensional setting is difficult to achieve under the presence of hubs. Similar properties can be show for the neighborhood selection procedure in \cite{meinshausen2006}.  In the particular case of graphs with a degree distribution following a power-law (otherwise known as scale-free graphs), there are usually hub vertices that pose a problem for the standard method.  As a result, specialized techniques are required.
@@ -385,16 +388,103 @@ We also apply the method to a real data set, available online at LINK.  Since th
 
 In order to generate synthetic data, we first sampled random graphs from various distributions.  Then, the true precision matrix $\Theta$ for a given graph was computed by $\Theta_{i,j} = -0.2$ whenever the $(i,j) \in E$ and zero otherwise.  The diagonal entries $\Theta_{i,i}$ were set to be $\Theta_{i,i} = 0.5 - \sum_{j \neq i} \Theta_{i,j}$ in order to make the precision matrix diagonally dominant.  Then, 500 samples are drawn from a  $\mathcal{N}(0,\Theta^{-1})$ multivariate normal distribution to form an empirical covariance matrix, which is then standardized into a correlation matrix.
 
-For the ROC curves computed using the thresholding method, we sampled graphs using both the preferential attachment model as well as a method described in BAYATI, which samples graphs uniformly over all graphs with a given degree profile.  The degree profile was generated using a preferential attachment model.  For each random graph process, we first sampled data once to tune the methods.   The methods are tuned to AUC using the ROC curve obtained by thresholding and the parameters were found using random-search.  Then, thirty more samples are drawn and ROC curves computed for each of them.  The average ROC curves are displayed in figure 1.
+For the ROC curves computed using the thresholding method, we sampled graphs using both the preferential attachment model as well as a method for constructing graphs for a given degree sequence.  Degree sequences are generated using a Pareto distribution. For each random graph process, we first sampled data once to tune the methods.   The methods are tuned to AUC using the ROC curve obtained by thresholding and the parameters were found using random-search.  Then, thirty more samples are drawn and ROC curves computed for each of them.  The average ROC curves are displayed in figure 1.
 
-For the ROC curves generated by varying the prior strength, we used three different graph structures including sample graphs from a preferential attachment model, sample Erdos-Renyi graphs, and a fixed star-shaped graph. 
+\begin{figure}
+\subfloat[][Preferential Attachment Model]{
+    \includegraphics[width=0.5\linewidth]{PA-Threshold-ROC.png}
+}
+\subfloat[][Fixed Degree Sequence Model]{
+    \includegraphics[width=0.5\linewidth]{bayatitestresults.png}
+}
+\caption{ROC curves obtained by thresholding estimates.}
+\label{fig:threshold}
+\end{figure}
+
+While the submodular relaxation method with a square root weighting scheme appears to be superior to competing methods, there is a significant caveat to the perceived performance of the submodular relaxation method in figure 1.  Computing ROC curves in this particular way does not provide a good indication of the actual tradeoff between false positive rate (FPR) and true positive rate (TPR).  In particular, the goal of sparse estimation techniques is to produce a sparse parameter estimate without the use of post-hoc thresholding.  However, tuning to AUC will usually result choosing tuning parameters that produce dense estimates.  The actual FPR versus TPR trade-off should be understood as a function of the regularization strength.
+
+However, this seems to match the ROC curves presented in \cite{Defazio2012}.  The authors also specifically note that the model is tuned on training data before the ROC curves are computed on test data.  In our attempts to reproduce these figures, tuning the method on other objectives such as accuracy or F1-score fails to produce dense graphs and thus the ROC curve cannot even be fully computed.  
+
+For the ROC curves generated by varying the prior strength, we used three different graph structures including sample graphs from a preferential attachment model, sample Erdos-Renyi graphs, and a fixed star-shaped graph. For each sample, fifty different models are fit at different tuning parameter settings. For the submodular relaxation method, a small linear smoothing term is used but only the $\alpha$ parameter is changed.  The resulting FPR and TPR represent a single point on the ROC curve.  The full average ROC curves over thirty samples for each random graph process are shown in figure 2.  Particular portions of the same curves are displayed in figure 3. 
+
+\begin{figure}
+\centering
+\subfloat[][Erdos-Renyi]{
+\includegraphics[width=0.5\linewidth]{ROC-params-erdos-full.pdf}
+}
+\subfloat[][Preferential Attachment]{
+\includegraphics[width=0.5\linewidth]{ROC-params-PA-full.pdf}
+}
+
+\subfloat[][Star]{
+\includegraphics[width=0.5\linewidth]{ROC-params-Star-full.pdf}
+}
+\caption{ROC curves obtained by varying regularization for Erdos Renyi, Preferential Attachment, and star shaped graphs.}
+\label{fig:paramfull}
+\end{figure}
+
+Before discussing the relative performance of the methods.  Note that the curves for the log based weighting scheme looks absurd in figure 2.  The concentration of points at high false positive rates indicates that there is a very sudden switch between producing dense precision matrices (which yield high false positive rates) and diagonal precision matrices.  While we do not have rigorous arguments to explain this phenomenon, we believe that this behavior is related to the decay of the penalty across the order statistics of a given row in the precision matrix.  In particular, the penalty associated with the smallest entry in a given row is orders of magnitude smaller than the penalty associated with the largest entry.  As a result, by the time the penalty is large enough for the lowest value to be driven to zero, the penalty on the larger entries may be many times larger.
+
+\begin{figure}
+\centering
+\subfloat[][Erdos-Renyi]{
+\includegraphics[width=0.5\linewidth]{ROC-params-erdos-part.pdf}
+}
+\subfloat[][Preferential Attachment]{
+\includegraphics[width=0.5\linewidth]{ROC-params-PA-part.pdf}
+}
+
+\caption{ROC curves obtained by varying regularization for Erdos Renyi and Preferential Attachment graphs.}
+\label{fig:parampart}
+\end{figure}
+
+Note that the curves for the preferential attachment model and the Erdos-Renyi model display similar patterns.  For lower false positive rates, the competing methods perform better on both.  However, there is a point on both curves at which the submodular relaxation begins to display better true positive rates.  Note that on the Erdos-Renyi curve, this change occurs at roughly fifteen percent false positive rate.  On the preferential attachment curve, this change occurs at roughly ten percent false positive rate.  In this sense, the submodular relaxation method does seem to perform better under the scale-free regime.  While we do not have formal arguments explaining this behavior, we believe that this is related to the decaying penalty.  The price of obtaining better accuracy for nodes with large degree seems to be the increase in spurious edges connected to nodes with low degree.  The tradeoff becomes more favorable as the graph size grows.  This is supported by the results for the star-shaped graph, where the methods aimed at scale-free graph structures are both superior to the graphical lasso.  
+
+
 
 
 
 \subsection{Gene Expression Data}
 
+The sample we used consists of 69 rats.  Expression levels were measured for 8565 genes using the rat liver cells.  We treat these vectors of expression levels as multivariate Gaussians.  Some missing values were found and were filled in with the value 1, which is what the authors used in their experiments.  Following \cite{Defazio2012}, we fit gene association networks on the first 500 genes using the submodular relaxation method, the graphical lasso, and the reweighted l1 methods by choosing tuning parameters which yield approximately 50 edges in the final estimate.  The choice of the first 500 is arbitrary and this data example serves only to illustrate the qualitative behavior of the estimators.  
+
+The major connected component of each of the model fits and the degree distribution of that component is displayed in figure 4.  We note that both the submodular relaxation method and the reweighted $l_1$ method produce more pronounced hub vertices with many neighbors.  The degree distributions also reflect this behavior.  The submodular relaxation and the reweighted $l_1$ both produce degree distributions with heavier tails as one would hope when estimating a scale-free graph.
+
+While the results of our experiments are encouraging, we were not able to reproduce the exact graphs presented in \cite{Defazio2012}, especially the star-shaped subgraph observed in their estimate obtained using the submodular relaxation method.  On the other hand, results obtained using the authors' publicly available implementation of the method agrees with our implementation.  
+
+\begin{figure}
+\centering
+\subfloat[][Graphical Lasso]{
+    \includegraphics[width=0.3\linewidth]{glasso_graph.pdf}
+}
+\subfloat[][Submodular Relaxation]{
+    \includegraphics[width=0.3\linewidth]{submod_graph.pdf}
+}
+
+\centering
+\subfloat[][Graphical Lasso]{
+    \includegraphics[width=0.3\linewidth]{glassodegree.pdf}
+}
+\subfloat[][Submodular Relaxation]{
+    \includegraphics[width=0.3\linewidth]{submoddegree.pdf}
+}
+
+
+\caption{Largest connected components of estimated graph structures and their degree distributions.}
+\label{graphs}
+\end{figure}
+We also observe that the tuning of the submodular relaxation method was extremely sensitive to the choice of tuning parameter.  In order to produce the graph displayed in figure 4, the linear smoothing term was chosen to dominate the square root portion of the penalty.  Recall that the penalty on $|\Theta_{i,(k)}|$ is given by
+\begin{equation*}
+    \alpha \left( h(k) - h(k-1) \right) = \alpha \left( \sqrt{k+1} - \sqrt{k} + \beta \right).
+\end{equation*}
+We took the $\beta = 0.8 \alpha^{-1}$ with $\alpha = 0.31$.  For comparison, we took the graphical LASSO tuning parameter $\lambda$, defined in \eqref{glasso}, to be $\lambda = 0.886$.  In other words, the submodular relaxation method was tuned so that it can be viewed as a slight modification to the graphical LASSO rather than an outright replacement.  
+
+The sensitivity to the choice of tuning parameters also made it very difficult to fit a model by the usual cross-validation techniques or by Bayes Information Criterion.  In principle, one could fit models on a training subset and evaluate the likelihood of the hold-out validation set to choose the tuning parameters.  However, simple grid-search or random-search methods seem to produce poor results.  The optimal $\alpha$ changes dramatically when $\beta$ is changed.  On the other hand, for a fixed $\beta$, small perturbations to $\alpha$ lead to very different model fits. For instance, when tuning the model to produce around fifty edges for figure 4, taking $\beta = 0.7 \alpha^{-1}$ resulted in choosing an $\alpha$ value of $\alpha = 1.5$.  However, taking $\alpha = 1.7$ in that case led to an estimated graph with zero edges while taking $\alpha = 1.3$ yielded over 500 edges.  Ideally, tuning $\alpha$ and $\beta$ would involve selecting a number of $\beta$ values and then searching over a small region of $\alpha$ values for each $\beta$, but we were not able to come up with a sensible way to determine that region.
+
+
 \section{Discussion}
 
+\cite{Defazio2012} presents a method for estimating the latent structure of a graphical model when the underlying graph is believed to be scale-free.  The method is a regularized likelihood method with a convex penalty motivated by a Bayesian perspective on the estimation of graphical models and derived by submodular relaxation.  The convexity of the penalty makes it an attractive option when compared to non-convex alternatives for computational purposes and allows for global optimality guarantees when computing the estimator. Furthermore, our experiments suggest that the proposed penalty shows promise when handling graphs with hub vertices.  However, the observed sensitivity to tuning parameters means that further careful analysis and experiments are required before the method can be applied in actual data analysis settings.  In particular, a clear and principled approach to balancing the linear smoothing term and the decaying penalty in the choice of weighting function is central to the success of the method in a real-world setting.
 
 
 \bibliography{stat572}
