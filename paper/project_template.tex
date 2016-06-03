@@ -7,18 +7,12 @@
 \usepackage{float}
 \usepackage[caption = false]{subfig}
 \usepackage[linesnumbered,algoruled,boxed,lined]{algorithm2e}
+\usepackage{setspace}
 
 %%\setlength{\oddsidemargin}{0.25in}
 %%\setlength{\textwidth}{6in}
 %%\setlength{\topmargin}{0.5in}
 %%\setlength{\textheight}{9in}
-
-\usepackage{color}
-\usepackage{ulem}
-\newcommand{\vmdel}[1]{\sout{#1}}
-\newcommand{\vmadd}[1]{\textbf{\color{red}{#1}}}
-\newcommand{\vmcomment}[1]{({\color{blue}{VM's comment:}} \textbf{\color{blue}{#1}})}
-
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}{Proposition}[theorem]
@@ -52,7 +46,7 @@
 
 
 \begin{abstract}
-  To be completed.
+  We examine a method to estimate the structure of graphical models when the structure is believed to be scale-free proposed by \cite{Defazio2012}.  We discuss its motivation, construction, and optimization before evaluating its performance against competing methods.  After replicating their experiments, we conduct a small number of further experiments to better understand the behavior of the method on both scale-free and non-scale-free graphical models.  We find that the sensitivity to tuning parameters remains an important obstacle to being able to use the method effectively in real world settings.
 \end{abstract}
 
 \section{Introduction}
@@ -87,11 +81,7 @@ In this report, we will discuss the motivation, mathematical construction, and c
 
 \subsection{Scale-Free Graphs}
 
-There does not seem to be a consistent and precise definition of a scale-free graph across the literature (see \citep{li2005}).  However, most definitions share the requirement that the degree distribution of the graph be distributed according to a power-law. For our purposes, a graph is scale-free if 
-\begin{equation}\label{powerlaw}
-P(k) \propto k^{-r},
-\end{equation}
-where $P(k)$ is the proportion of vertices with $k$ neighbors and $r$ is a positive constant.  This particular definition was first used by \cite{Barabasi99} when describing the network topology of large networks in the real world.  However, empirical evidence of heavy tailed degree distributions was first observed in academic citation networks in \citep{de1965networks}.
+There does not seem to be a consistent and precise definition of a scale-free graph across the literature (see \citep{li2005}).  However, most definitions share the requirement that the degree distribution of the graph be distributed according to a power-law. For our purposes, a graph is scale-free if $P(k) \propto k^{-r}$, where $P(k)$ is the proportion of vertices with $k$ neighbors and $r$ is a positive constant.  This particular definition was first used by \cite{Barabasi99} when describing the network topology of large networks in the real world.  However, empirical evidence of heavy tailed degree distributions was first observed in academic citation networks in \citep{de1965networks}.
 
 One of the key features of scale-free graphs is the presence of hub nodes, or vertices with a large number of neighbors.  In some applications, correct identification of these hub nodes is a central concern.  For example, \cite{barabasi2004network} examines a number of biological networks, including protein-protein interaction networks and genetic regulatory networks, and notes that hub nodes may "fundamentally determine the network's behaviour."
 
@@ -100,14 +90,10 @@ One of the key features of scale-free graphs is the presence of hub nodes, or ve
 \subsection{A Simplified Problem}
 
 We first consider a simplified problem in which the values of the diagonal of the precision matrix are fixed and known and the off-diagonal entries are either zero or are equal to some known constant $\gamma$.  
-Under this simplification, we reduce the problem of covariance selection to finding which of the off-diagonal entries are non-zero.  As a result, a Bayesian estimation procedure needs only to assign a discrete prior distribution over possible edge sets of the underlying graph. To be precise, let $V$ be a set $p$ vertices corresponding to the dimension of the data.  For a given edge set $E$, we define a precision matrix $\Theta(E)$ with diagonal entries given by the fixed and known values and off-diagonal entries given by
-\begin{equation*}
-    \Theta(E)_{i,j} = \gamma {\bf{1}}_{\{(i,j) \in E\}}.
-\end{equation*}
+Under this simplification, we reduce the problem of covariance selection to finding which of the off-diagonal entries are non-zero.  As a result, a Bayesian estimation procedure needs only to assign a discrete prior distribution over possible edge sets of the underlying graph. To be precise, let $V$ be a set $p$ vertices corresponding to the dimension of the data.  For a given edge set $E$, we define a precision matrix $\Theta(E)$ with diagonal entries given by the fixed and known values and off-diagonal entries given by $\Theta(E)_{i,j} = \gamma {\bf{1}}_{\{(i,j) \in E\}}$.
 A posterior distribution can be formed by modeling the conditional distribution of the data $X$ to be a multivariate normal with mean zero and covariance matrix $\Theta(E)^{-1}$.  By concentrating prior probabilities on graphs that exhibit a scale-free structure, it is possible to encourage the final estimate to be scale-free.
 
 Since the scale-free property is essentially a description of the degrees of the vertices in the graph, it is natural to construct a prior distribution that depends only on the degree profile.  To this end, the authors use an exponential random graph model parameterized by degree to form their prior.  For a fixed vertex set $V$, the probability distribution over edge sets $E$ is given by
-
 \begin{equation}\label{cprior}
 P( E ) \propto \exp \left( - \sum_{v \in V} h(d_E(v)) \right),
 \end{equation}
@@ -121,11 +107,7 @@ where $L$ denotes the likelihood function for a mean zero multivariate normal wi
 
 \subsection{Enforcing the Scale Free Property}
 
-In order to concentrate the probability mass of this prior on scale-free graphs, the authors propose using $h(k) = \alpha \log(k + \varepsilon)$ for some positive constants $\alpha, \varepsilon > 0$.  Here, $\alpha$ is a  hyperparameter meant to reflect the scale of the power-law and $\varepsilon$ is an offset to ensure the argument to log is positive. In practice, $\alpha$ is a tuning parameter which controls the strength of the prior / regularization. While the authors do not formally prove that this probability distribution over edge sets satisfies any particular definition of scale-free, they do provide an informal motivation.  By plugging in this particular form of $h$ into equation \eqref{cprior}, the prior probability mass function becomes:
-\begin{equation*}
-    P( E) \propto \prod_{v \in V} (d_E(v) + \varepsilon)^{-\alpha}.
-\end{equation*}
-Note that if the degrees of the vertices $d_E(v)$ for $v \in V$ were mutually independent, then the marginal distribution of each $d_E(v)$ follows a power-law and samples from this distribution will tend to produce scale-free graphs.  However, independence does not hold because increasing the degree of one vertex necessarily increases the degree of some other vertex.  Unfortunately, it is not obvious how to assess the appropriateness of this heuristic motivation as the explicit computation of degree correlation is intractable.  Furthermore, our experiments indicate that choices of $h$ other than log provide superior results.
+In order to concentrate the probability mass of this prior on scale-free graphs, the authors propose using $h(k) = \alpha \log(k + \varepsilon)$ for some positive constants $\alpha, \varepsilon > 0$.  Here, $\alpha$ is a  hyperparameter meant to reflect the scale of the power-law and $\varepsilon$ is an offset to ensure the argument to log is positive. In practice, $\alpha$ is a tuning parameter which controls the strength of the prior / regularization. While the authors do not formally prove that this probability distribution over edge sets satisfies any particular definition of scale-free, they do provide an informal motivation.  By plugging in this particular form of $h$ into equation \eqref{cprior}, the prior probability mass function becomes $P( E) \propto \prod_{v \in V} (d_E(v) + \varepsilon)^{-\alpha}$. Note that if the degrees of the vertices $d_E(v)$ for $v \in V$ were mutually independent, then the marginal distribution of each $d_E(v)$ follows a power-law and samples from this distribution will tend to produce scale-free graphs.  However, independence does not hold because increasing the degree of one vertex necessarily increases the degree of some other vertex.  Unfortunately, it is not obvious how to assess the appropriateness of this heuristic motivation as the explicit computation of degree correlation is intractable.  Furthermore, our experiments indicate that choices of $h$ other than log provide superior results.
 
 \subsection{Submodular Functions}
 
@@ -141,7 +123,7 @@ A set function $f \, : \, 2^E \to \mathbb{R}$ on $E$ is said to be a nondecreasi
 \end{equation*}
 \end{definition}
 
-The first condition ensure that we are dealing with a monotone set function. The second condition can be understood as a diminishing returns condition.  Adding any element $x$ to a smaller set yields a larger increase in $f$ than adding the same element to a larger set.
+The first condition ensure that we are dealing with a monotone set function. The second condition can be understood as a diminishing returns condition.  Adding any element $x$ to a smaller set yields a larger increase in $f$ than adding the same element to a larger set.  
 
 The reason that submodular functions are of interest in the context of this method is due to the form of the proposed prior.  Let $\mathcal{E}$ denote the set of of all possible edge sets for graph with a vertex set $V$.  For a given weighting function $h$, define a function $F \, : \, 2^{\mathcal{E}} \to \mathbb{R}$ by
 \begin{equation}\label{F}
@@ -152,14 +134,7 @@ Note that in the expression for the  negative log posterior density for the simp
 \begin{lemma}
 Let $h$ be a concave, non-decreasing function from $\mathbb{N} \to \mathbb{R}^+$, then $F$ as defined in equation \eqref{F} is a submodular function.
 \end{lemma}
-\begin{proof}
-For a fixed vertex $v \in V$, we check that $d_E(v)$ is a submodular function on $\mathcal{E}$.  Fix any two subsets $A \subseteq B \subseteq \mathcal{E}$.  Trivially, $d_A(v) \leq d_B(v)$ since all edges connected to $v$ in $A$ are contained in $B$.  To check the submodularity condition, first observe that for any edge $e \in \mathcal{E}$ and any subset $C \subset \mathcal{E}$, we must have that $d_{C \cup \{e\}}(v) - d_{C}(v) \leq 1$.  Furthermore, for any $e$ not connected to $v$, then $d_{C \cup \{e\}}(v) - d_{C}(v) = 0$.  Finally, if $e$ is connected to $v$, then either $e \in A$ or $e \in A^C$.  If $e \in A$, then $A \cup \{e\} = A$ and $B \cup \{e\} = B$ which implies that the requirement of condition 2 is met.  On the other hand, if $e \in A^C$, then $d_{A \cup \{e\}} (v) - d_A(v) = 1$.  By the bound established earlier, the second condition holds in this case as well.  We conclude that
-$d_E(v)$ is a submodular function.
-
-It is shown in \citep{fujishige2005submodular} that a concave, non-decreasing transformation of a submodular function is submodular.  Thus, $h(d_E(v))$ is a submodular function.  Lastly, a non-negative linear combination of submodular functions is a submodular function.  We conclude that $F$ is submodular.
-\end{proof}
-
-For the remainder of the paper we will assume $h$ to be a concave, non-decreasing function.  We will also assume $h(0) = 0$ for convenience.  The fact that $F$ is submodular is important for two reasons.  The first is that generalizing beyond the simplified problem to regular covariance selection can be accomplished through a natural relaxation of $F$ via the Lov{\'a}sz extension.  This extension will be discussed more thoroughly in the next section.  The second reason is that the submodularity of $F$ places the authors' method in the context of a broader class of methods which induce structured sparsity through submodular functions as discussed in \citep{bach2010}. Submodular functions may offer a unified framework for developing new theory and methods aimed at problems leveraging a priori knowledge about the sparsity pattern in non-trivial ways.
+For the remainder of the paper we will assume $h$ to be a concave, non-decreasing function.  We will also assume $h(0) = 0$ for convenience.  The submodularity of $F$ is important for two reasons.  First, generalizing beyond the simplified problem to regular covariance selection can be accomplished through a natural relaxation of $F$ via the Lov{\'a}sz extension.  This extension is convex for submodular functions.  The second reason is that the submodularity of $F$ places the authors' method in a broader class of methods which induce structured sparsity through submodular functions as discussed in \citep{bach2010}. Submodular functions may offer a unified framework for developing new theory and methods aimed at problems leveraging a priori knowledge about the sparsity pattern in non-trivial ways.
 
 
 
@@ -167,7 +142,7 @@ For the remainder of the paper we will assume $h$ to be a concave, non-decreasin
 
 While the discrete prior constructed for the simplified problem highlights the motivation for the main method in terms of the desired structure, the simplified problem does not apply to any real-world scenario.  In particular, the values of the entries in the precision matrix are almost always unknown parameters and assuming particular fixed values usually has no reasonable justification.  One possibility is to explicitly assign priors to the entries of the precision matrix and compute estimates via samples from the posterior as considered by \cite{sheridan2010}.  Alternatively, we can directly modify the form of the log posterior to accommodate unknown values of the precision matrix.  
 
-Returning to equation \eqref{logpost}, we note that the likelihood term does not need to be modified as we can immediately allow for $\Theta$ to vary over all positive definite matrices.  On the other hand, the contribution of the prior $F$ is in terms of the edge set rather than the entries of precision matrix.  The authors propose relaxing $F$ from a set function to a function mapping $\mathbb{R}^{|\mathcal{E}|} \to \mathbb{R}$ by taking the convex envelope found using the Lov{\'a}sz extension, which is defined below.
+Returning to equation \eqref{logpost}, we note that the likelihood term does not need to be modified as we can immediately allow for $\Theta$ to vary over all positive definite matrices.  On the other hand, the contribution of the prior $F$ is in terms of the edge set rather than the precision matrix.  The authors propose relaxing $F$ from a set function to a function mapping $\mathbb{R}^{|\mathcal{E}|} \to \mathbb{R}$ by taking the convex envelope found using the Lov{\'a}sz extension, which is defined below.
 
 \subsubsection{Definition}
 Let $f \, : \, 2^E \to \mathbb{R}$ be a set function with $E = {1,...,N}$.  For a point $x \in [0,1]^N$ and $\lambda \in [0,1]$, define $T_{\lambda}(x) = \{i \in E \, : \, x_i \geq \lambda\}$.  Then the Lov{\'a}sz extension of $f$, denoted $\hat{f}$, is given by:
@@ -184,7 +159,7 @@ T_{\lambda}(x) = \begin{cases}
 \varnothing & {\text{ otherwise}}.
 \end{cases}
 \end{equation*}
-Therefore, the Lov{\'a}sz extension is exactly given by:
+Therefore, the Lov{\'a}sz extension is given by
 \begin{equation}\label{lovasz}
 \begin{aligned}
 \hat{f}(x) &= &&(1-x_{(1)}) f( \varnothing) + x_{(N)} f(\{1,...,N\})+ \sum_{i=1}^N f(\{1,...,i\})(x_{(i)} - x_{(i+1)}) 
@@ -202,40 +177,23 @@ The Lov{\'a}sz extension $\hat{F} \, : \, [0,1]^{|\mathcal{E}|} \to \mathbb{R}$ 
 where each sequence $x_{(i,1)},...,x_{(i,p-1)}$ denotes the edges corresponding to the possible neighbors of $i$ in decreasing order.
 \end{lemma}
 
-\begin{proof}
-We first consider the set function $F_v(E) = h(d_E(v))$ for a fixed vertex $v$. We extend $F_v$ to a map  $\hat{F}_v \, : \, [0,1]^{|\mathcal{E}|} \to \mathbb{R}$.  Notice that any edge $(i,j)$ where $i \neq v$ and $j \neq v$ is irrelevant to the evaluation of $F_v$. Therefore, the contribution of that edge to the sum in equation \eqref{lovasz} will be exactly zero. So without loss of generality, we need only consider the $p-1$ coordinates $x_{(v,i)}$ for $i \in V \setminus \{v\}$.  We also observe that $F_v( \{(v,1),...,(v,i)\}) = h(i)$ since $F_v$ depends only on the number of neighbors of $v$. Then the Lov{\'a}sz extension for $F_v$ is given by:
-\begin{equation*}
-    \hat{F}_v(x) = \sum_{i = 1}^{p-1} (h(i) - h(i-1)) x_{(v,i)}.
-\end{equation*}
-To compute $\hat{F}$, we sum the extensions $\hat{F}_v$ over all $v \in V$ since the Lov{\'a}sz extension of a sum of submodular function is the sum of their individual extensions.
-\end{proof}
-
-
 By Proposition 1 of \cite{bach2010}, we can obtain the convex envelope $\Omega$ of $F$ on $\mathbb{R}^{\mathcal{E}}$ to be the evaluation of the Lov{\'a}sz extension of $F$ on the absolute values of the entries of the off-diagonal elements of the precision matrix.  In other words, for each $i = 1,...,p$,  let $|\Theta_{i,(0)}| \geq \cdots \geq |\Theta_{i,(p-1)}|$ denote the off-diagonal elements of the $i^{th}$ row in decreasing order by absolute value.  Then, the convex envelope $\Omega$ is given by
 \begin{equation}\label{omega}
 \Omega(\Theta) = \sum_{i=1}^p \sum_{k=1}^{p-1} (h(k) - h(k-1)) | \Theta_{i,(k)}|.
 \end{equation}
-Equation \eqref{omega} is a slight abuse of notation as $\Theta \in \mathbb{R}^{p \times p}$ while the cardinality of the set of possible edges is only $|\mathcal{E}| = \binom{p}{2}$.  If we consider the $\Omega$ to be a function of the off-diagonal entries of symmetric matrices that is invariant to changes on the diagonal, the abuse of notation is not very important as it is still clear that $\Omega$ is convex over the space of symmetric matrices.  However, in section 2.8, we will require that the $\Omega$ be convex over the space of all matrices $\mathbb{R}^{p \times p}$. Fortunately, the convexity of this penalty can be proved directly.  
+Equation \eqref{omega} is a slight abuse of notation as $\Theta \in \mathbb{R}^{p \times p}$ while the cardinality of the set of possible edges is only $|\mathcal{E}| = \binom{p}{2}$.  If we consider the $\Omega$ to be a function of the off-diagonal entries of symmetric matrices that is invariant to changes on the diagonal, the abuse of notation is not very important as it is still clear that $\Omega$ is convex over the space of symmetric matrices.  However, in section 3.1, we will require that the $\Omega$ be convex over the space of all matrices $\mathbb{R}^{p \times p}$. Fortunately, the convexity of this penalty can be proved directly as an easy corollary of Proposition 1.1 of \cite{bogdan2013statistical} .  
 
-The use of a convex envelope as an approximation to a combinatorial penalty is not a new idea.  For example, the $l_1$ norm can be viewed as the convex envelope of the cardinality function on the support of a vector.  From this perspective, the usual $l_1$ regularization term can be seen as the convex relaxation of a penalty which counts the non-zero entries of the solution.
+% The use of a convex envelope as an approximation to a combinatorial penalty is not a new idea.  For example, the $l_1$ norm can be viewed as the convex envelope of the cardinality function on the support of a vector.  From this perspective, the usual $l_1$ regularization term can be seen as the convex relaxation of a penalty which counts the non-zero entries of the solution.
 
 \subsection{The Estimator}
 
-Plugging the convex relaxation derived in the previous section into equation 5, we obtain the proposed estimator for learning a scale-free precison matrix with unknown entries.  As before, let $S$ denote the empirical covariance matrix obtained from an i.i.d. sample of $n$ multivariate Gaussians of dimension $p$.  Then, for a fixed $h$ and constant $\alpha > 0$, the estimator is defined to be
+Plugging the convex relaxation derived in the previous section into equation \eqref{logpost}, we obtain the proposed estimator for learning a scale-free precison matrix with unknown entries.  As before, let $S$ denote the empirical covariance matrix obtained from an i.i.d. sample of $n$ multivariate Gaussians of dimension $p$.  Then, for a fixed $h$ and constant $\alpha > 0$, the estimator is defined to be
 \begin{equation}\label{estimator}
 \widehat{\Theta}_{submod} = \underset{\Theta = \Theta^T, \, \Theta \succ 0}{\arg \min} - \log(\det(\Theta)) + tr(S \Theta) + \alpha \Omega(\Theta).
 \end{equation}
 Here, $\alpha > 0$ is a tuning parameter set by the user to control the strength of the regularization.  
 
-The objective function for the estimator is strictly convex because $- \log \det(\Theta)$ is strictly convex, $tr(S \Theta)$ is linear, and $\Omega(\Theta)$ is convex in $\Theta$.  Therefore, if a minimum exists, then it must be unique.  Furthermore, we can apply the argument of Lemma 3 from \cite{ravikumar2011} to ensure a positive definite solution exists.  Note that $- \log \det \Theta$ is infinite for positive-semidefinite matrices, so the minimizer must be strictly positive definite, if it exists.  By Proposition 1 of \cite{bach2010}, $\Omega$ is a norm on the off-diagonal entries of $\Theta$.  Therefore, the minimization problem of equation \eqref{estimator} has an equivalent constrained version by Langrangian duality given by
-\begin{equation}
-\underset{\Theta = \Theta^T, \, \Theta \succ 0, \, \Omega(\Theta) \leq C(\alpha)}{\arg \min} - \log(\det(\Theta)) + tr(S \Theta)
-\end{equation}
-for a value $C(\alpha) > 0$ depending only on $\alpha$. Therefore, the entries of the off-diagonal are bounded and we need only to ensure that the diagonal entries do not diverge to infinity (which would send $- \log \det (\Theta)$ to negative infinity).  By Hadamard's inequality for positive definite matrices, we have that $\log \det (\Theta) \leq \sum_{i=1}^p \log (\Theta_{ii})$.  Therefore, we have the bound
-\begin{equation}\label{hadamard}
-\sum_{i=1}^p \Theta_{ii} S_{ii} - \log \det (\Theta) \geq \sum_{i=1}^p\Theta_{ii} S_{ii} - \log (\Theta_{ii}).
-\end{equation}
-Since $S_{ii}$ corresponds to a diagonal entry, it will be positive except in degenerate cases not considered here.  It is easy to see the lower bound in equation \eqref{hadamard} tends to infinity as $\sum \Theta_{ii}^2$ grows towards infinity.  This implies that $\widehat{\Theta}_{submod}$ is a well defined estimator.
+The objective function for the estimator is strictly convex because $- \log \det(\Theta)$ is strictly convex, $tr(S \Theta)$ is linear, and $\Omega(\Theta)$ is convex in $\Theta$.  Therefore, if a minimum exists, then it must be unique.  Furthermore, we can apply a simlar argument to Lemma 3 of \cite{ravikumar2011} to ensure a positive definite solution exists. The details of the argument are in Appendix
 
 While the method is motivated by a Bayesian perspective and the use of scale-free priors, the actual procedure is not intended to be truly Bayesian.  Since we are not fixing the values of the diagonal entries of $\Theta$, we are implicitly taking an improper uniform prior.  However, the authors made several references to the desire for a normalizable prior, which is obviously impossible with an improper prior.  Instead, it may be more correct to view the final estimator as a frequentist regularized likelihood method motivated by Bayesian ideas.
 
@@ -243,38 +201,21 @@ While the method is motivated by a Bayesian perspective and the use of scale-fre
 
 \subsection{Choices of $h$}
 
-Ideally, $h$ should be chosen such that the expected degree distribution of sample graphs from the prior should match the degree distribution of the desired graph structure.  In principle, this can accomplished for a given graph via maximum likelihood estimation.  While maximum likelihood estimation for exponential random graphs, one could use sampling techniques such as the MCMC method developed in \cite{snijders2002markov}.  
+Ideally, $h$ should be chosen such that the expected degree distribution of sample graphs from the prior should match the degree distribution of the desired graph structure.  In principle, this can accomplished for a given graph via maximum likelihood estimation.  While maximum likelihood estimation for exponential random graphs is computationally difficult, one could use sampling techniques such as the MCMC method developed in \cite{snijders2002markov}.  
 
-The authors also propose other possible choices for $h$ satisfying the requirement that $h$ is monotone increasing and concave.  For example, a slight modification to the choice of logarithm could be
-\begin{equation*}
-    h(k) = \log(k + 1) + \beta k
-\end{equation*}
-for some $\beta > 0$.  This will smooth the prior in the sense that all edges now receive a baseline penalty given by $\alpha \beta$ in addition to the penalty induced by the log term.
-
-Another possibility suggested by the authors is to take
-\begin{equation*}
-    h(k) = \sqrt{k+1} - 1 + \beta k.
-\end{equation*}
-The square-root penalty diminishes slower than the $\log$ term.  Note that taking $h$ to be the identity recovers the graphical LASSO, so we can view using the square-root (or any other power function) to be an interpolation between the $\log$ method and the graphical LASSO.
+The authors also propose other possible choices for $h$ satisfying the requirement that $h$ is monotone increasing and concave.  For example, a slight modification to the choice of logarithm could be to take $h(k) = \log(k + 1) + \beta k$ for some $\beta > 0$.  This will smooth the prior in the sense that all edges now receive a baseline penalty given by $\alpha \beta$ in addition to the penalty induced by the log term.  Another possibility suggested by the authors is to take $h(k) = \sqrt{k+1} - 1 + \beta k$.
+This square-root penalty diminishes slower than the $\log$ term.  Note that taking $h$ to be the identity recovers the graphical LASSO, so we can view using the square-root (or any other power function) to be an interpolation between the $\log$ method and the graphical LASSO.
 
 
 
 \section{Optimization}
 
 In order to compute the estimator, the authors propose using alternating direction method of multipliers (ADMM).  Introduced by \cite{Boyd2011}, ADMM combines dual decomposition and augmented Lagrangians in order to solve convex programs of the form:
-\begin{equation*}
+\begin{equation}\label{admm}
     \min_{x,y} f(x) + g(y) {\text{  subject to }} Ax + By = c,
-\end{equation*}
-with variables $x \in \mathbb{R}^n, \, y \in \mathbb{R}^m$ and parameters $A \in \mathbb{R}^{n \times p}, B \in \mathbb{R}^{m \times p}$ and $c \in \mathbb{R}^p$.  The objective function must be the sum of two convex functions $f$ and $g$.  In particular, if a convex objective function $h$ which can be written as $h(x) = f(x) + g(x)$, then the unconstrained minimization problem given by
-\begin{equation*}
-\min_{x} h(x) = \min_{x} f(x) + g(x)
-\end{equation*}
-can be solved by applying ADMM to the constrained problem given by
-\begin{align*}
-& \min_{x,y} f(x) + g(y) 
-\\
-& {\text{ subject to }} x - y = 0.
-\end{align*}
+\end{equation}
+with variables $x \in \mathbb{R}^n, \, y \in \mathbb{R}^m$ and parameters $A \in \mathbb{R}^{n \times p}, B \in \mathbb{R}^{m \times p}$ and $c \in \mathbb{R}^p$.  The objective function must be the sum of two convex functions $f$ and $g$.  In particular, if a convex objective function $h$ which can be written as $h(x) = f(x) + g(x)$, then the unconstrained minimization problem defined by $\min_{x} f(x) + g(x)$ can be solved by applying ADMM to the constrained problem given by
+\ref{admm} with taking $A = I_{p \times p}, B = - I_{p \times p}$ and $c = 0_p$.
 This particular form applies to a number of regularized $M$-estimators such as the regular LASSO or the graphical LASSO where both the objective and regularization terms are convex.  
 
 As noted above, both the likelihood function and the penalty derived from the submodular functions are convex and ADMM can be applied. Following the algorithm on page 15 of \citep{Boyd2011}, the authors use the scaled form of the ADMM algorithm.  Fix a step-size parameter $\rho > 0$.  Initialize $\Theta^{(0)} = I_{p\times p}$ and $U^{(0)} = 0_{p \times p}$.  Then, given the values $\Theta^{(l)}$ and $U^{(l)}$ from the previous step, the $(l+1)^{th}$ iteration of ADMM is given by
@@ -290,11 +231,7 @@ U^{(l+1)} & = U^{(l)} + \Phi^{(l+1)} - \Theta^{(l+1)}.
 \end{align}
 These steps are sequentially computed until a stopping criterion is met.  The authors use the stopping criterion that both $\|\Theta^{(l+1)} - \Phi^{(l+1)}\|_2 < \epsilon$ and $\|\Theta^{(l+1)} - \Theta^{(l)}\|_2 < \epsilon$ for some small tolerance $\epsilon > 0$.  The first condition ensures that the equality constraint is satisfied and the second condition ensures that the solution is stable.  Note that the first $\Phi$ and $\Theta$ updates are both proximal operators. 
 
-The solution to the $\Phi^{(l+1)}$ update has a closed form solution as derived in \citep{Boyd2011},  which is guaranteed to be positive definite even if $\Theta^{(l)} - U^{(l)}$ is not positive definite.  Take the eigenvalue-decomposition $\rho(\Theta^{(l)} - U^{(l)}) + S =  Q \Lambda Q^T$ with eigenvalues $\lambda_1,...,\lambda_p$.  For each $i = 1,...,p$, define $\lambda^{\prime}_i = \frac{\lambda_i + \sqrt{\lambda_i^2 + 4\rho}}{2 \rho}$.  Let $\Lambda^{\prime}$ be the $p \times p$ matrix with diagonal entries given by $\lambda^{\prime}_1,...,\lambda^{\prime}_p$ and off-diagonal entries set to zero.  Then the update to $X^{(l+1)}$ is exactly:
-\begin{equation*}
-X^{(l+1)} = Q \Lambda^{\prime} Q^T.
-\end{equation*}
-This solution can be obtained by considering the first order sub-gradient equations \citep{Boyd2011}.
+The solution to the $\Phi^{(l+1)}$ update has a closed form solution as derived in \citep{Boyd2011},  which is guaranteed to be positive definite even if $\Theta^{(l)} - U^{(l)}$ is not positive definite.  Take the eigenvalue-decomposition $\rho(\Theta^{(l)} - U^{(l)}) + S =  Q \Lambda Q^T$ with eigenvalues $\lambda_1,...,\lambda_p$.  For each $i = 1,...,p$, define $\lambda^{\prime}_i = \frac{\lambda_i + \sqrt{\lambda_i^2 + 4\rho}}{2 \rho}$.  Let $\Lambda^{\prime}$ be the $p \times p$ matrix with diagonal entries given by $\lambda^{\prime}_1,...,\lambda^{\prime}_p$ and off-diagonal entries set to zero.  Then the update to $X^{(l+1)}$ is exactly $X^{(l+1)} = Q \Lambda^{\prime} Q^T$. This solution can be obtained by considering the first order sub-gradient equations \citep{Boyd2011}.
 
 The update to $\Theta^{(l+1)}$ is considerably more complicated as $\Omega$ is not differentiable and depends on the row-wise order statistics.  Furthermore, the symmetry constraint implies non-obvious interactions between the different rows.  For example, changing the value of $\Theta_{i,j}$ may impact the rank of entries in rows $i$ and $j$. The authors use a dual decomposition method to compute the solution.  
 
@@ -305,42 +242,34 @@ The dual decomposition method proposed by the authors solves the proximal operat
 \begin{equation}\label{dualdecomp}
 \min_{\Theta \in \mathbb{R}^{p \times p}, \, \Theta = \Theta^T} \, \alpha \Omega(\Theta) + \frac{\rho}{2} \| \Phi^{(l+1)} - \Theta + U^{(l)} \|_2^2.
 \end{equation}
-The authors claim that this simply makes the existing symmetry constraint and making it explicit.  
-However, it is unclear whether or not the symmetry constraint alone guarantees a positive definite solution.  The solution would be guaranteed to be positive definite if the $\Phi^{(l+1)} + U^{(l)}$ could be guaranteed to be diagonally dominant, but that may not be true in general.  In practice, the results seem to be positive definite.
+The authors claim that this simply makes the existing symmetry constraint explicit.  
+However, it is unclear whether or not the symmetry constraint alone guarantees a positive definite solution. In practice, the results seem to be positive definite.
 
 Note that the problem defined by \eqref{dualdecomp} is a strictly convex function with a linear equality constraint.  By Slater's constraint qualification, the problem must satisfy strong duality.  In other words, minimizing the primal is equivalent to maximizing the dual.  Denoting $Z = \Phi^{(l+1)} + U^{(l)}$, the dual function $g$ is given by
 \begin{equation}\label{dual}
 g(V) = \min_{\Theta \in \mathbb{R}^{p \times p} } \frac{\alpha}{\rho} \Omega(\Theta) + \frac{1}{2} \| \Theta - Z \|_2^2 + \frac{1}{2}\sum_{i=1}^p V_{i,*}^T ( \Theta_{i,*} - \Theta_{*, i}^T),
 \end{equation}
-where $V_{i,*}, \Theta_{i,*}$ are the $i^{th}$ rows of their respective matrices and $\Theta_{*,i}$ is the $i^{th}$ column of $\Theta$.  In this formulation, we have taken $V$ to be a skew-symmetric matrix such that $V = - V^T$.  This notation allows us to rewrite the last term of the expression as
-\begin{equation*}
-\frac{1}{2}\sum_{i=1}^p V_{i,*}^T ( \Theta_{i,*} - \Theta_{*, i}^T) = \sum_{i=1}^p V_{i,*}^T \Theta_{i,*}.
-\end{equation*}
+where $V_{i,*}, \Theta_{i,*}$ are the $i^{th}$ rows of their respective matrices and $\Theta_{*,i}$ is the $i^{th}$ column of $\Theta$.  In this formulation, we have taken $V$ to be a skew-symmetric matrix such that $V = - V^T$.  This notation allows us to rewrite the last term of the expression as $\sum_{i=1}^p V_{i,*}^T \Theta_{i,*}$.
 By completing the square, we can rewrite the minimizer $\Theta(V)$ of \eqref{dual} to be
 \begin{equation*}
 \begin{aligned}
-\Theta(V) &= && \underset{\Theta \in \mathbb{R}^{p \times p}}{\arg\min} \, \frac{\alpha}{\rho} \Omega(\Theta) + \frac{1}{2} \| \Theta - Z \|_2^2 + \sum_{i=1}^p V_{i,*}^T \Theta_{i,*} + {\text{ const}}
-\\
-&= &&  \underset{\Theta \in \mathbb{R}^{p \times p}}{\arg\min} \sum_{i=1}^p \frac{\alpha}{\rho} \sum_{k=1}^{p-1} (h(k) - h(k-1)) |\Theta_{i,(k)}| + \frac{1}{2} \| \Theta_{i,*} - Z_{i,*} + V_{i,*} \|_2^2 + {\text{ const}},
+\Theta(V) &= && \underset{\Theta \in \mathbb{R}^{p \times p}}{\arg\min} \sum_{i=1}^p \frac{\alpha}{\rho} \sum_{k=1}^{p-1} (h(k) - h(k-1)) |\Theta_{i,(k)}| + \frac{1}{2} \| \Theta_{i,*} - Z_{i,*} + V_{i,*} \|_2^2 + C(V),
 \end{aligned}
 \end{equation*}
-where the constant does not depend on $\Theta$ or $V$.  Since the dual is defined as the minimum over all $\Theta \in \mathbb{R}^p$, we can evaluate the dual by solving the subproblems
+where $C(V)$ is some value which does not depend on $\Theta$.  Since the dual is defined as the minimum over all $\Theta \in \mathbb{R}^p$, we can find $\Theta(V)$ by solving the subproblems
 \begin{equation}\label{subprobfull}
     \min_{\Theta_{i,*} \in \mathbb{R}^p} \frac{\alpha}{\rho} \sum_{k=1}^{p-1} (h(k) - h(k-1))|\Theta_{i,(k)}| + \frac{1}{2} \| \Theta_{i,*} - Z_{i,*} + V_{i,*} \|_2^2
 \end{equation}
-independently for each $i=1,...,p$.  In particular, we use this method to find $\Theta(V)$.
+independently for each $i=1,...,p$.  Note that $V_{i,i} = 0$ by construction and that the penalty does not apply to $\Theta_{i,i}$ and therefore in the solution to the subproblem $\Theta_{i,i} = Z_{i,i}$.  
 
-We observe that each subproblem defined by \eqref{subprobfull} is the sum of a convex function and a quadratic term.  This implies that there is a unique minimizer $\Theta^{\star}$ that defines the dual.  As a result, the subdifferential of $g$ contains only a single point and we conclude the dual is the differentiable with gradient given by:
-\begin{equation*}\label{dualgrad}
-\nabla g(V) = \Theta_{\star} - \Theta_{\star}^T.
-\end{equation*}
-With the gradient in hand, we are now ready to provide the algorithm for computing the proximal operator.
+We observe that each subproblem defined by \eqref{subprobfull} is the sum of a convex function and a quadratic term.  This implies that there is a unique minimizer $\Theta^{\star}$ that defines the dual.  As a result, the subdifferential of the dual $g$ contains only a single point and we conclude that it is the differentiable with gradient given by $\nabla g(V) = \Theta(V) - \Theta(V)^T$. With the gradient in hand, we are now ready to provide the algorithm for computing the proximal operator.
 
 \begin{algorithm}[!htp]
+  \setstretch{0.9}
   \KwIn{matrix $Z$, constants $\alpha$, $\rho$, tolerance $\epsilon$, step-size $\eta \in (0,1)$}
   \KwInit{$X = Z$, $V = 0_{p \times p}$}
   \Repeat{$\|X - X^T\| < \epsilon$}{
-    \For{$l = 1,...,n$}{
+    \For{$l = 1,...,p$}{
         $w = \sigma(Z_{l,*} - V_{l,*})$ {\it \# $\sigma$ permutes the off-diagonal elements of a row into descending order by absolute value}
         \\
         $X_{l,\neg} = \sigma^{-1}(\text{{ solveSubproblem}}(w))$ 
@@ -353,13 +282,13 @@ With the gradient in hand, we are now ready to provide the algorithm for computi
 \caption{Dual Gradient Ascent}\label{alg1}
 \end{algorithm}
 
-The authors maximize the dual by gradient ascent and the explicit steps are given in Algorithm \ref{alg1}.  The main difficulty is solving the subproblems. In Algorithm 2, we describe the method used by the authors to solve the subproblems under the simplifying assumption of a pre-sorted input.  While similar to standard LASSO regression with an identity design matrix, the ordered penalty introduces complications.  Namely, when a block of consecutive order statistics in a particular row have the same absolute value, they behave as a single point with a penalty given by the average of their individual penalties.  In order to overcome this grouping, the authors use a disjoint-set data structure to keep track of the groups and their respective values. The proof of correctness is provided in the Appendix.
+The authors maximize the dual by gradient ascent and the details are given in Algorithm \ref{alg1}.  The main difficulty is solving the subproblems. In Algorithm 2, we describe the method used by the authors to solve the subproblems under the assumption of a pre-sorted input.  While similar to standard LASSO regression, the ordered penalty introduces complications.  Namely, when a block of consecutive order statistics in a particular row have the same absolute value, they behave as a single point with a penalty given by the average of their individual penalties.  The authors use a disjoint-set data structure to keep track of the blocks and their respective values. The proof of correctness is provided in the Appendix B.
 
 \begin{algorithm}[!htp]
-    \KwIn{vector $w \in \mathbb{R}^{p-1}$ with $|w_1| \geq \cdots \geq |w_{p-1}|$\}}
-    \KwInit{disjoint-set data structure with set membership function $\gamma$}
+    \KwIn{vector $w \in \mathbb{R}^{p-1}$ with $|w_1| \geq \cdots \geq |w_{p-1}|$}
+    \KwInit{disjoint-set data structure with set membership function $\gamma$ so that each $i=1,...,p$ is a singleton set.}
     \KwInit{vectors $u = 0_{p-1}$, $x = 0_{p-1}$}
-    \For{$k=1,...,n-1$}
+    \For{$k=1,...,p-1$}
     {
         $u_k = |w_k| - \frac{\alpha}{\rho} (h(k) - h(k-1))$
         \\
@@ -376,7 +305,7 @@ The authors maximize the dual by gradient ascent and the explicit steps are give
                 $r = \min \gamma(r)$
         }
     }
-        \For{$k=1,...,n$}
+        \For{$k=1,...,p$}
     {
         $x_k = {\text{sign}}(w_k) \cdot \max\{\gamma(k).value,0\}$
     }
@@ -384,7 +313,7 @@ The authors maximize the dual by gradient ascent and the explicit steps are give
     \caption{solveSubproblem}\label{alg2}
 \end{algorithm}
 
-The solution of the subproblem has been independently studied by \cite{su2016} in the context of variable selection for regression via an ordered LASSO penalty.  \cite{su2016} uses a slightly different stack-based algorithm to compute the solution and point out its connection to isotonic regression.
+The solution of the subproblem has been independently studied by \cite{bogdan2015slope} in the context of variable selection for regression via an ordered LASSO penalty.  \cite{bogdan2015slope} uses a slightly different stack-based algorithm to compute the solution and point out its connection to isotonic regression.
 
 
 \section{Results}
@@ -392,6 +321,8 @@ The solution of the subproblem has been independently studied by \cite{su2016} i
 In this section, we compare the performance of the submodular relaxation method against the reweighted $l_1$ method of \cite{liu11c} and against the standard graphical LASSO.  In order to perform these comparisons using simulated data, we construct ROC curves in two ways.  The first method is to use what we believe to be the same method as the authors, which consists of fitting a single model for each simulated sample and thresholding the absolute values of the off-diagonal entries to produce an ROC curve.  The second method is to fit multiple models at different regularization strengths to obtain a false positive rate and true positive rate for each model.
 
 We also apply the method to a real data set consisting of gene expression data in rats from the Gene Expression Omnibus database \citep{gds}.  Since there is no way to validate our findings on this dataset, we only consider the qualitative differences between the methods through visualizations of the estimated graphs. We also highlight the sensitivity to choices of hyper-parameters.
+
+We do not reproduce the experiments related to computational speed.  For the experiments in \cite{Defazio2012} related to the convergence of the dual decomposition method, we were not able to find an implementation of the Frank-Wolfe algorithm for solving the minimum norm point problem that uses numpy.  Furthermore, comparing our implementation of the submodular relaxation against the reweighted $l_1$ method is not a fair comparison.  Our implementation of the submodular relaxation uses Cython to compute the solution of the subproblem while our reweighted $l_1$ method is implemented in pure Python. 
 
 \subsection{Synthetic Data}
 
@@ -401,10 +332,10 @@ For the ROC curves computed using the thresholding method, we sampled graphs usi
 
 \begin{figure}
 \subfloat[][Preferential Attachment Model]{
-    \includegraphics[width=0.5\linewidth]{PA-Threshold-ROC.png}
+    \includegraphics[width=0.5\linewidth]{pathresh.pdf}
 }
 \subfloat[][Fixed Degree Sequence Model]{
-    \includegraphics[width=0.5\linewidth]{bayatitestresults.png}
+    \includegraphics[width=0.5\linewidth]{bayatithresh.pdf}
 }
 \caption{ROC curves obtained by thresholding estimates.}
 \label{fig:threshold}
@@ -418,15 +349,16 @@ For the ROC curves generated by varying the prior strength, we used three differ
 
 \begin{figure}
 \centering
+\includegraphics[width=1.0\linewidth]{legend.pdf}
+
 \subfloat[][Erdos-Renyi]{
-\includegraphics[width=0.5\linewidth]{ROC-params-erdos-full.pdf}
+\includegraphics[width=0.31\linewidth]{ROC-params-erdos-full.pdf}
 }
 \subfloat[][Preferential Attachment]{
-\includegraphics[width=0.5\linewidth]{ROC-params-PA-full.pdf}
+\includegraphics[width=0.31\linewidth]{ROC-params-PA-full.pdf}
 }
-
 \subfloat[][Star]{
-\includegraphics[width=0.5\linewidth]{ROC-params-Star-full.pdf}
+\includegraphics[width=0.31\linewidth]{ROC-params-Star-full.pdf}
 }
 \caption{ROC curves obtained by varying regularization for Erdos Renyi, Preferential Attachment, and star shaped graphs.}
 \label{fig:paramfull}
@@ -436,6 +368,8 @@ Before discussing the relative performance of the methods.  Note that the curves
 
 \begin{figure}
 \centering
+\includegraphics[width=1.0\linewidth]{legend.pdf}
+
 \subfloat[][Erdos-Renyi]{
 \includegraphics[width=0.5\linewidth]{ROC-params-erdos-part.pdf}
 }
@@ -447,7 +381,7 @@ Before discussing the relative performance of the methods.  Note that the curves
 \label{fig:parampart}
 \end{figure}
 
-Note that the curves for the preferential attachment model and the Erdos-Renyi model display similar patterns.  For lower false positive rates, the competing methods perform better on both.  However, there is a point on both curves at which the submodular relaxation begins to display better true positive rates.  Note that on the Erdos-Renyi curve, this change occurs at roughly fifteen percent false positive rate.  On the preferential attachment curve, this change occurs at roughly ten percent false positive rate.  In this sense, the submodular relaxation method does seem to perform better under the scale-free regime.  While we do not have formal arguments explaining this behavior, we believe that this is related to the decaying penalty.  The price of obtaining better accuracy for nodes with large degree seems to be the increase in spurious edges connected to nodes with low degree.  The tradeoff becomes more favorable as the graph size grows.  This is supported by the results for the star-shaped graph, where the methods aimed at scale-free graph structures are both superior to the graphical lasso.  
+Note that the curves for the preferential attachment model and the Erdos-Renyi model display similar patterns.  For lower false positive rates, the competing methods perform better on both.  However, there is a point on both curves at which the submodular relaxation begins to display better true positive rates.  Note that on the Erdos-Renyi curve, this change occurs at roughly fifteen percent false positive rate.  On the preferential attachment curve, this change occurs at roughly ten percent false positive rate.  In this sense, the submodular relaxation method does seem to perform better under the scale-free regime.  While we do not have formal arguments explaining this behavior, we believe that this is related to the decaying penalty.  The price of obtaining better accuracy for nodes with large degree seems to be the increase in spurious edges connected to nodes with low degree.  The tradeoff between FPR and TPR becomes more favorable relative to the graphical LASSO when there are more vertices of high degree and less vertices of low but non-zero degree.  This is supported by the results for the star-shaped graph, where the methods aimed at scale-free graph structures are both superior to the graphical lasso.  
 
 
 
@@ -455,11 +389,11 @@ Note that the curves for the preferential attachment model and the Erdos-Renyi m
 
 \subsection{Gene Expression Data}
 
-We used the data from \cite{ganter05}, which consists of gene expression data from 69 male rats treated with various anticancer drugs.  The dataset was accessed using the GEOquery R package \citep{geoquery}.  Expression levels were measured for 8565 genes using rat liver cells.  We treat these vectors of expression levels as multivariate Gaussians.  Some missing values were found and were filled in with the value 1, which is what the authors used in their experiments.  Following \cite{Defazio2012}, we fit gene association networks on the first 500 genes using the submodular relaxation method, the graphical lasso, and the reweighted l1 methods by choosing tuning parameters which yield approximately 50 edges in the final estimate.  The choice of the first 500 is arbitrary and this data example serves only to illustrate the qualitative behavior of the estimators.  
+We used the data from \cite{ganter05}, which consists of gene expression data from 69 male rats treated with various anticancer drugs.  The dataset was accessed using the GEOquery R package \citep{geoquery}.  Expression levels were measured for 8565 genes using rat liver cells.  We model these vectors of expression levels as multivariate Gaussians.  Some missing values were found and were filled in with the value 1, which is what the authors used in their experiments.  Following \cite{Defazio2012}, we fit gene association networks by estimating the precision matrix on the first 500 genes using the submodular relaxation method and the graphical LASSO by choosing tuning parameters which yield approximately 50 edges in the final estimate. We attempted to fit the reweighted $l_1$ to the data, but we were not able to produce a graph with around 50 edges.   The choice of the first 500 is arbitrary and this data example serves only to illustrate the qualitative behavior of the estimators.  
 
-The major connected component of each of the model fits and the degree distribution of that component is displayed in figure 4.  We note that both the submodular relaxation method and the reweighted $l_1$ method produce more pronounced hub vertices with many neighbors.  The degree distributions also reflect this behavior.  The submodular relaxation and the reweighted $l_1$ both produce degree distributions with heavier tails as one would hope when estimating a scale-free graph.
+The major connected component subgraph of each of the model fits and the degree distribution of that subgraph is displayed in Figure 4. We note that the submodular relaxation method produces more nodes with high degree in comparison to the graphical LASSO. This can be seen both visually in the depicted graphs as well as in the degree distributions.  Since the presence of hub nodes with high degree are a common feature of scale-free graphs, we can view this experiment as encouraging evidence that the submodular relaxation method is capturing some aspects of scale-free networks.
 
-While the results of our experiments are encouraging, we were not able to reproduce the exact graphs presented in \cite{Defazio2012}, especially the star-shaped subgraph observed in their estimate obtained using the submodular relaxation method.  On the other hand, results obtained using the authors' publicly available implementation of the method agrees with our implementation.  
+We were not able to reproduce the exact graphs presented in \cite{Defazio2012}, especially the star-shaped subgraph observed in their estimate obtained using the submodular relaxation method.  On the other hand, results obtained using the authors' publicly available implementation of the method agrees with our implementation.  We do not know how the graphs in the paper are produced. 
 
 \begin{figure}
 \centering
@@ -479,6 +413,7 @@ While the results of our experiments are encouraging, we were not able to reprod
 }
 
 
+
 \caption{Largest connected components of estimated graph structures and their degree distributions.}
 \label{graphs}
 \end{figure}
@@ -486,40 +421,61 @@ We also observe that the tuning of the submodular relaxation method was extremel
 \begin{equation*}
     \alpha \left( h(k) - h(k-1) \right) = \alpha \left( \sqrt{k+1} - \sqrt{k} + \beta \right).
 \end{equation*}
-We took the $\beta = 0.8 \alpha^{-1}$ with $\alpha = 0.31$.  For comparison, we took the graphical LASSO tuning parameter $\lambda$, defined in \eqref{glasso}, to be $\lambda = 0.886$.  In other words, the submodular relaxation method was tuned so that it can be viewed as a slight modification to the graphical LASSO rather than an outright replacement.  
+We took the $\beta = 0.85 \alpha^{-1}$ with $\alpha = 0.1$.  For comparison, we took the graphical LASSO tuning parameter $\lambda$, defined in \eqref{glasso}, to be $\lambda = 0.885$.  This meant that the submodular relaxation method was tuned so that the penalty on each term was not far from the graphical LASSO. Choosing smaller linear smoothing terms can drastically alter the fitted model.  For example, when $\beta = 0.5\alpha^{-1}$, the corresponding major component is a complete subgraph on 11 vertices.
 
-The sensitivity to the choice of tuning parameters also made it very difficult to fit a model by the usual cross-validation techniques or by Bayes Information Criterion.  In principle, one could fit models on a training subset and evaluate the likelihood of the hold-out validation set to choose the tuning parameters.  However, simple grid-search or random-search methods seem to produce poor results.  The optimal $\alpha$ changes dramatically when $\beta$ is changed.  On the other hand, for a fixed $\beta$, small perturbations to $\alpha$ lead to very different model fits. For instance, when tuning the model to produce around fifty edges for figure 4, taking $\beta = 0.7 \alpha^{-1}$ resulted in choosing an $\alpha$ value of $\alpha = 1.5$.  However, taking $\alpha = 1.6$ in that case led to an estimated graph with zero edges while taking $\alpha = 1.4$ yielded over 500 edges.  Ideally, tuning $\alpha$ and $\beta$ would involve selecting a number of $\beta$ values and then searching over a small region of $\alpha$ values for each $\beta$, but we were not able to come up with a sensible way to determine that region.
+The sensitivity to the choice of tuning parameters also made it very difficult to fit a model by the usual cross-validation techniques or by Bayes Information Criterion (BIC).  In principle, one could fit models on a training subset and evaluate the likelihood of the validation set or train the model on the whole dataset and compute BIC to choose the tuning parameters.  However, simple grid-search or random-search methods will likely produce poor results.  The optimal $\alpha$ can change dramatically when $\beta$ is changed.  On the other hand, for a fixed value of $\beta$, small perturbations to $\alpha$ lead to very different model fits. This is especially true when $\beta$ is small.  Ideally, tuning $\alpha$ and $\beta$ would involve selecting a number of $\beta$ values and then searching over a small region of $\alpha$ values for each $\beta$, but we were not able to come up with a sensible way to determine that region.
 
 
 \section{Discussion}
 
-\cite{Defazio2012} presents a method for estimating the latent structure of a Gaussian graphical model when the underlying graph is believed to be scale-free.  The method is a regularized likelihood method with a convex penalty motivated by a Bayesian perspective on the estimation of graphical models and derived by submodular relaxation.  The convexity of the penalty makes it an attractive option when compared to non-convex alternatives for computational purposes and allows for global optimality guarantees when computing the estimator. Our experiments suggest that the proposed penalty shows promise when handling graphs with hub vertices, which is a common feature of scale-free graphs.  However, the observed sensitivity to tuning parameters means that further careful analysis and experiments are required before the method can be applied in actual data analysis settings.  In particular, a clear and principled approach to balancing the linear smoothing term and the decaying penalty in the choice of weighting function is central to the success of the method in a real-world setting.
+\cite{Defazio2012} presents a method for estimating the latent structure of a Gaussian graphical model when the underlying graph is believed to be scale-free.  The method is a regularized likelihood method with a convex penalty motivated by a Bayesian perspective on the estimation of graphical models and derived by submodular relaxation.  The convexity of the penalty makes it an attractive option when compared to non-convex alternatives for computational purposes and allows for global optimality guarantees when computing the estimator. Our experiments suggest that the proposed penalty shows promise when handling graphs with hub vertices, which is a common feature of scale-free graphs.  However, the severe sensitivity to tuning parameters means that further careful analysis and experiments are required before the method can be applied in actual data analysis settings.  In particular, a principled approach to balancing the linear smoothing term and the decaying penalty in the choice of weighting function is central to the success of the method in a real-world setting.
+
 
 \bibliography{stat572}
 
-\end{document}
+\appendix
+
+\section{Proof of Lemmas 2.1 and 2.2}
+\subsection{Lemma 2.1}
+
+\begin{proof}
+For a fixed vertex $v \in V$, we check that $d_E(v)$ is a submodular function on $\mathcal{E}$.  Fix any two subsets $A \subseteq B \subseteq \mathcal{E}$.  Trivially, $d_A(v) \leq d_B(v)$ since all edges connected to $v$ in $A$ are contained in $B$.  To check the submodularity condition, first observe that for any edge $e \in \mathcal{E}$ and any subset $C \subset \mathcal{E}$, we must have that $d_{C \cup \{e\}}(v) - d_{C}(v) \leq 1$.  Furthermore, for any $e$ not connected to $v$, then $d_{C \cup \{e\}}(v) - d_{C}(v) = 0$.  Finally, if $e$ is connected to $v$, then either $e \in A$ or $e \in A^C$.  If $e \in A$, then $A \cup \{e\} = A$ and $B \cup \{e\} = B$ which implies that the requirement of condition 2 is met.  On the other hand, if $e \in A^C$, then $d_{A \cup \{e\}} (v) - d_A(v) = 1$.  By the bound established earlier, the second condition holds in this case as well.  We conclude that
+$d_E(v)$ is a submodular function.
+
+It is shown in \citep{fujishige2005submodular} that a concave, non-decreasing transformation of a submodular function is submodular.  Thus, $h(d_E(v))$ is a submodular function.  Lastly, a non-negative linear combination of submodular functions is a submodular function.  We conclude that $F$ is submodular.
+\end{proof}
+
+
+\subsection{Lemma 2.2}
+\begin{proof}
+We first consider the set function $F_v(E) = h(d_E(v))$ for a fixed vertex $v$. We extend $F_v$ to a map  $\hat{F}_v \, : \, [0,1]^{|\mathcal{E}|} \to \mathbb{R}$.  Notice that any edge $(i,j)$ where $i \neq v$ and $j \neq v$ is irrelevant to the evaluation of $F_v$. Therefore, the contribution of that edge to the sum in equation \eqref{lovasz} will be exactly zero. So without loss of generality, we need only consider the $p-1$ coordinates $x_{(v,i)}$ for $i \in V \setminus \{v\}$.  We also observe that $F_v( \{(v,1),...,(v,i)\}) = h(i)$ since $F_v$ depends only on the number of neighbors of $v$. Then the Lov{\'a}sz extension for $F_v$ is given by:
+\begin{equation*}
+    \hat{F}_v(x) = \sum_{i = 1}^{p-1} (h(i) - h(i-1)) x_{(v,i)}.
+\end{equation*}
+To compute $\hat{F}$, we sum the extensions $\hat{F}_v$ over all $v \in V$ since the Lov{\'a}sz extension of a sum of submodular function is the sum of their individual extensions.
+\end{proof}
+
+\section{Positive Definiteness of $\hat{\Theta}_{submod}$}
+
+ Note that $- \log \det \Theta$ is infinite for positive-semidefinite matrices, so the minimizer must be strictly positive definite, if it exists.  By Proposition 1 of \cite{bach2010}, $\Omega$ is a norm on the off-diagonal entries of $\Theta$.  Therefore, the minimization problem of equation \eqref{estimator} has an equivalent constrained version by Langrangian duality given by
+\begin{equation}
+\underset{\Theta = \Theta^T, \, \Theta \succ 0, \, \Omega(\Theta) \leq C(\alpha)}{\arg \min} - \log(\det(\Theta)) + tr(S \Theta)
+\end{equation}
+for a value $C(\alpha) > 0$ depending only on $\alpha$. Therefore, the entries of the off-diagonal are bounded and we need only to ensure that the diagonal entries do not diverge to infinity (which would send $- \log \det (\Theta)$ to negative infinity).  By Hadamard's inequality for positive definite matrices, we have that $\log \det (\Theta) \leq \sum_{i=1}^p \log (\Theta_{ii})$.  Therefore, we have the bound
+\begin{equation}\label{hadamard}
+\sum_{i=1}^p \Theta_{ii} S_{ii} - \log \det (\Theta) \geq \sum_{i=1}^p\Theta_{ii} S_{ii} - \log (\Theta_{ii}).
+\end{equation}
+Since $S_{ii}$ corresponds to a diagonal entry, it will be positive except in degenerate cases not considered here.  It is easy to see the lower bound in equation \eqref{hadamard} tends to infinity as $\sum \Theta_{ii}^2$ grows towards infinity.  This implies that $\widehat{\Theta}_{submod}$ is a well defined estimator.
 
 
 
+\section{Solution to the Subproblem}
 
-
-
-
-
-
-Understanding and estimating the structure of the edge set $E$ is an important task in fields such as social network analysis or bioinformatics.  For example, graphical models may be fit to gene expression data in order to estimate a gene expression network as described in  or to identify individual genes which have a large influence on the network.
-
-
-Both the reweighted $l_1$ method and the convex relaxation method can both be thought of as part of a larger class of procedures which induce {\textit{structured}} sparsity in parameter estimates, where prior knowledge about the sparsity pattern can be exploited.  Examples include the group LASSO in \cite{Yuan06}, the fused LASSO in \cite{Tibshirani05sparsityand}, and trend filtering in \cite{Kim09trend} which all encode some desired properties in parameter estimates beyond simple sparsity.  Furthermore, the Defazio and Caetano is an example of the connection between submodular functions and sparsity inducing forms discussed in \cite{NIPS2010_3933}.
-
-
-\subsection{Solution to the Subproblem}
-
-For notational convenience, we will describe the algorithm for the problem defined by
+For notational convenience, we will prove the correctness of the algorithm for the problem defined by
 \begin{equation}\label{subprobsimple}
 \min_{x \in \mathbb{R}^p} \frac{1}{2} \|y - x\|^2 + \sum_{i=1}^p \lambda_{i} |x_{(i)}|
 \end{equation}
-with $\lambda_{1} \geq \cdots \geq \lambda_{(p)}$ and $|x_{(1)}| \geq \cdots \geq x_{(p)}|$.  We assume without loss of generality that $y_{1} \geq \cdots \geq y_{p} \geq 0$.  This is because the sign of each coordinate in the solution must match the sign of the corresponding coordinate of $y$.  Therefore, we can solve the problem for a non-negative vector $y$ and then reverse the signs later.  Since the penalty only depends on the order statistics, we can also apply a permutation to $y$ to put it in sorted order and then apply the inverse permutation to the solution later.  Furthermore, the following lemma from \cite{su2016} shows that the sort order of the solution matches the sort order of the target $y$.
+with $\lambda_{1} \geq \cdots \geq \lambda_{(p)}$ and $|x_{(1)}| \geq \cdots \geq |x_{(p)}|$.  We assume without loss of generality that $y_{1} \geq \cdots \geq y_{p} \geq 0$.  This is because the sign of each coordinate in the solution must match the sign of the corresponding coordinate of $y$.  Therefore, we can solve the problem for a non-negative vector $y$ and then reverse the signs later.  Since the penalty only depends on the order statistics, we can also apply a permutation to $y$ to put it in sorted order and then apply the inverse permutation to the solution later.  Furthermore, the following lemma from \cite{bogdan2015slope} shows that the sort order of the solution matches the sort order of the target $y$.
 
 \begin{lemma}\label{ordering}
 When $y_1 \geq \cdots \geq y_p \geq 0$, the solution $x$ to \eqref{subprobsimple} satisfies $x_1 \geq \cdots \geq x_p \geq 0$.
@@ -536,13 +492,68 @@ This follows from the fact that swapping $x_i$ and $x_j$ affects neither the reg
 which contradicts the optimality of $x$. 
 \end{proof}
 Lemma \ref{ordering} implies that we can reformulate \eqref{subprobsimple} as 
-\begin{align}
+\begin{equation}\label{constrained}
+\begin{aligned}
 & \min_{x} \frac{1}{2} \|y-x\|^2 + \sum_{i=1}^p \lambda_i x_i 
 \\
-& {\text{subject to }} x_1 \geq \cdots \geq x_p \geq 0.
-\end{align}
-Using this form of the problem, we can explicitly compute subgradients.  For $x_i$ not equal to any other $x_j$, the partial derivative is given by
+& {\text{subject to }} x_1 \geq \cdots \geq x_p \geq 0,
+\end{aligned}
+\end{equation}
+which is simply a constrained quadratic programming problem.  As a result, proving the correctness of Algorithm 2 can be done by ensuring that the output of the algorithm satisfies the Karush-Kahn-Tucker (KKT) conditions.
+
+Returning to the construction of Algorithm 2, we can characterize the output of the algorithm in terms of the partition induced by the disjoint-set data structure at termination. Let $\gamma(i)$ denote the set including the $i^{th}$ coordinate at the termination of the algorithm. Then the output of Algorithm 2, denoted $x^*$ is the vector with entries given by
+\begin{equation}\label{algout}
+    x_i^* =  \left( \frac{1}{|\gamma(i)|} \sum_{s \in \gamma(i)} y_s - \lambda_s \right)_+.
+\end{equation}
+This explicit formulation of the output of the algorithm will be used in Lemma \ref{alg2correct} to guarantee correctness.
+
+Lemma \ref{alg2order} that guarantees that the sort order of the output matches the constraint of \eqref{constrained}.  This is a guarantee that Algorithm 2 always produces feasible point for the constrained problem and is an important starting point to proving optimality.  Lemma \ref{alg2correct} completes the argument that 
+
+\begin{lemma}\label{alg2order}
+Let $y \in \mathbb{R}^p$ be the input to Algorithm 2. The output of Algorithm 2, denoted $x^*$, must satisfy $x_1^* \geq \cdots \geq x^*_p$. 
+\end{lemma}
+\begin{proof}
+We proceed by induction.  On the first iteration of the outer loop, the ordering is trivially satisfied for $\{x_1^*\}$.  Assume that on iteration $k$ of the outer loop, the ordering holds for $i < k$. If $y_k - \lambda_k$ is strictly less than $\frac{1}{|\gamma(k-1)|} \sum_{s \in \gamma(k-1)} y_s - \lambda_s$, then the ordering is correct and the iteration ends.  If not, then the singleton set $\gamma(k)$ is merged with $\gamma(k-1)$ and value of the merged set becomes the weighted average of values the two original sets. This potentially increases the value associated with $\gamma(k-1)$ so that the ordering may be violated.  This issue is solved by the recursive merging procedure.  Note that there can be at most $k$ merges at each iteration of the outer loop, but the ordering will always be maintained.
+
+Lastly, we note that the thresholding of the negative values at the end of the algorithm does not perturb the ordering and the result follows.
+\end{proof}
+
+\begin{lemma}\label{alg2correct}
+$x^*$ minimizes the constrained quadratic program defined in \eqref{constrained}.
+\end{lemma}
+\begin{proof}
+As previously stated, we prove the lemma by verifying the KKT conditions.  In this case, we must construct a feasible dual variable $\mu \in \mathbb{R}^p$ (corresponding to the $p$ linear constraints induced by the ordering) that satisfies the following four conditions:
+\begin{enumerate}
+\item \textbf{Primal Feasibility:} $x_1^* \geq \cdots \geq x_p^* \geq 0$.
+\item \textbf{Dual Feasibility:} $\mu_i \geq 0$ for each $i = 1,...,p$.
+\item \textbf{Complementary Slackness:} $\mu_i(x^*_{i} - x^*_{i+1}) \geq 0$ with the convention that $x^*_{p+1} = 0$.
+\item \textbf{Lagrangian Stationarity:} $x_i^{*} - y_i + \lambda_{i} - (\mu_i - \mu_{i-1}) = 0$ where $\mu_0 = 0$.
+\end{enumerate}
+We define $\mu$ recursively using the Lagrangian Stationarity condition.  For a base case, define $\mu_1 = x_1^* - y_1 + \lambda_1$.  Now for $i =2,...,p$, we define $\mu_i = \mu_{i-1} + x_i^* - y_i + \lambda_i$.  In closed form, we can then write
+\begin{equation}\label{dualvar}
+\mu_i = \sum_{j=1}^i x_j^* - y_j + \lambda_j.
+\end{equation}
+We prove that $\mu$ is dual feasible by induction. Since the merging procedure can only ever increase $x_1^*$ and at the first iteration $x_i^*$ is defined to be $y_i - \lambda_i$, we must have that $\mu_1 \geq 0$.  Now, assume that $\mu_{i-1} \geq 0$.  If $x_i \geq y_i - \lambda_i$, then $\mu_{i} \geq 0$ trivially.  On the other hand, if $x_i < y_i - \lambda_i$, then we know that $\gamma(i)$ must have merged into $\gamma(i-1)$.  Let $i_0 = \min \gamma(i-1)$, then we must have that
 \begin{equation*}
-    \frac{\partial f}{\partial x_i}(x) = x_i - y_i + \lambda_i.
+    x_i^* \geq \frac{1}{i - i_0 + 1} \sum_{j=i_0}^i y_j - \lambda_j,
 \end{equation*}
-Which is similar to the 
+for each $k=i_0,...,i$.  The upper bound follows from the fact that this is the value assigned to $x_k^*$ when the merge first occurs.  Any further merges can only increase the value.  Plugging in this bound to \eqref{dualvar} and using the fact that $x_{i_0}^* = \cdots = x_i^*$, we obtain the bound
+\begin{equation}
+\mu_i \geq \sum_{j=1}^{i_0 -1} x_j^* - y_j + \lambda_j = \mu_{i_0 - 1} \geq 0.
+\end{equation}
+We conclude that $\mu$ is dual-feasible.  
+
+As primal feasibility is guaranteed by Lemma \ref{algout}It remains to show that the complementary slackness condition holds.  It suffices to prove that when $x_i^* - x_{i+1}^* > 0$, we have that $\mu_i = 0$.  If $x_i^* - x_{i+1}^* > 0$, then we know that $\gamma(i)$ and $\gamma(i+1)$ are disjoint.  This implies that the collection of sets $\{\gamma(1),...,\gamma(i)\}$ is a partition of $\{1,...,i\}$.  Therefore, we may write
+\begin{equation*}
+    \sum_{j=1}^i x_j^* = \sum_{j=1}^i \frac{1}{|\gamma(j)|} \sum_{s \in \gamma(j)} y_s - \lambda_s = \sum_{j=1}^i y_j - \lambda_j,
+\end{equation*}
+which immediately implies that $\mu_i = 0$.
+
+\end{proof}
+
+\end{document}
+
+
+
+
+
